@@ -12,7 +12,7 @@ public:
 // Global instance of the mock class
 MockAlert mockAlert;
 
-// Function to override the original alert functions
+// Override the original functions with mocks
 void sendToControllerMock(BreachType breachType) {
     mockAlert.sendToController(breachType);
 }
