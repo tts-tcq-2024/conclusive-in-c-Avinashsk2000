@@ -64,18 +64,15 @@ void sendToController(BreachType breachType) {
 // Send alert via email
 void sendToEmail(BreachType breachType) {
     const char* recipient = "a.b@c.com";
-    switch (breachType) {
-        case TOO_LOW:
-            printf("To: %s\n", recipient);
-            printf("Hi, the temperature is too low\n");
-            break;
-        case TOO_HIGH:
-            printf("To: %s\n", recipient);
-            printf("Hi, the temperature is too high\n");
-            break;
-        case NORMAL:
-            printf("To: %s\n", recipient);
-            printf("Hi, the temperature is normal\n");
-            break;
+    const char* messages[] = {
+        "Hi, the temperature is normal",   // NORMAL (0)
+        "Hi, the temperature is too low",  // TOO_LOW (1)
+        "Hi, the temperature is too high"  // TOO_HIGH (2)
+    };
+
+    // Check that breachType is within bounds of the messages array
+    if (breachType >= NORMAL && breachType <= TOO_HIGH) {
+        printf("To: %s\n", recipient);
+        printf("%s\n", messages[breachType]);
     }
 }
