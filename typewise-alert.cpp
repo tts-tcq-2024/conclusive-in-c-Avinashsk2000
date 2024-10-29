@@ -97,6 +97,5 @@ int main() {
 
     // Check and send alert
     checkAndAlert(alertTarget, batteryChar, temperatureInC);
-
     return 0;
 }
