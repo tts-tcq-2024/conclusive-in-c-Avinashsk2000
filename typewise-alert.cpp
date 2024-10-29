@@ -3,21 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Enum for cooling types
-typedef enum {
-    PASSIVE_COOLING,
-    HI_ACTIVE_COOLING,
-    MED_ACTIVE_COOLING,
-    NUM_COOLING_TYPES // This serves as a count of cooling types
-} CoolingType;
-
-// Enum for breach types
-typedef enum {
-    NORMAL,
-    TOO_LOW,
-    TOO_HIGH
-} BreachType;
-
 // Struct to define temperature limits for each cooling type
 typedef struct {
     double lowerLimit;
@@ -25,7 +10,7 @@ typedef struct {
 } TemperatureLimits;
 
 // Temperature limits lookup table for each cooling type
-const TemperatureLimits coolingLimits[NUM_COOLING_TYPES] = {
+const TemperatureLimits coolingLimits[] = {
     {0, 35},  // PASSIVE_COOLING
     {0, 45},  // HI_ACTIVE_COOLING
     {0, 40}   // MED_ACTIVE_COOLING
@@ -33,7 +18,7 @@ const TemperatureLimits coolingLimits[NUM_COOLING_TYPES] = {
 
 // Function to retrieve temperature limits based on cooling type
 TemperatureLimits getTemperatureLimits(CoolingType coolingType) {
-    if (coolingType < 0 || coolingType >= NUM_COOLING_TYPES) {
+    if (coolingType < PASSIVE_COOLING || coolingType > MED_ACTIVE_COOLING) {
         fprintf(stderr, "Error: Invalid cooling type.\n");
         exit(EXIT_FAILURE);
     }
@@ -93,13 +78,8 @@ void handleAlert(AlertTarget alertTarget, BreachType breachType) {
 }
 
 // Function to check and alert based on temperature and cooling type
-void checkAndAlert(AlertTarget alertTarget, BatteryCharacter* batteryChar, double temperatureInC) {
-    if (batteryChar == NULL) {
-        fprintf(stderr, "Error: BatteryCharacter pointer is NULL.\n");
-        return;
-    }
-
-    BreachType breachType = classifyTemperatureBreach(batteryChar->coolingType, temperatureInC);
+void checkAndAlert(AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
+    BreachType breachType = classifyTemperatureBreach(batteryChar.coolingType, temperatureInC);
     handleAlert(alertTarget, breachType);
 }
 
@@ -108,13 +88,15 @@ int main() {
     // Simulate a battery character
     BatteryCharacter batteryChar;
     batteryChar.coolingType = HI_ACTIVE_COOLING;
+    strncpy(batteryChar.brand, "SampleBrand", sizeof(batteryChar.brand) - 1);
+    batteryChar.brand[sizeof(batteryChar.brand) - 1] = '\0'; // Ensure null termination
 
     // Simulate temperature readings
     double temperatureInC = 50.0; // Example temperature
     AlertTarget alertTarget = TO_EMAIL; // Example alert target
 
     // Check and send alert
-    checkAndAlert(alertTarget, &batteryChar, temperatureInC);
+    checkAndAlert(alertTarget, batteryChar, temperatureInC);
 
     return 0;
 }
