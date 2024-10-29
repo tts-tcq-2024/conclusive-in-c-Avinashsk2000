@@ -1,19 +1,22 @@
 #include <gtest/gtest.h>
 #include "typewise-alert.h"
 
+// Global variables to track state in mock functions
+bool controller_called = false;
+bool email_called = false;
+BreachType last_breach_type;
+
 // Function pointer types for mocking
 void (*sendToControllerPtr)(BreachType) = sendToController; 
 void (*sendToEmailPtr)(BreachType) = sendToEmail;
 
 // Mock functions
 void sendToControllerMock(BreachType breachType) {
-    // Mock implementation
     controller_called = true;
     last_breach_type = breachType;
 }
 
 void sendToEmailMock(BreachType breachType) {
-    // Mock implementation
     email_called = true;
     last_breach_type = breachType;
 }
@@ -36,6 +39,8 @@ TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithPassiveCooling) {
 
 TEST(TypeWiseAlertTestSuite, CheckAndAlertForController) {
     controller_called = false; // Reset the flag before test
+    last_breach_type = NORMAL; // Reset the breach type before test
+
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
     double temperatureInC = 36;
@@ -50,6 +55,8 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertForController) {
 
 TEST(TypeWiseAlertTestSuite, CheckAndAlertForEmail) {
     email_called = false; // Reset the flag before test
+    last_breach_type = NORMAL; // Reset the breach type before test
+
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
     double temperatureInC = 34;
