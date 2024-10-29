@@ -1,5 +1,3 @@
-#pragma once
-
 typedef enum {
     PASSIVE_COOLING,
     HI_ACTIVE_COOLING,
