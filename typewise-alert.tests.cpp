@@ -54,8 +54,3 @@ TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithMedActiveCooling) {
     EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 40), NORMAL);
     EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 41), TOO_HIGH);
 }
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleMock(&argc, argv);
-    return RUN_ALL_TESTS();
-}
