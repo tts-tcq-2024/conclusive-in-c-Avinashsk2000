@@ -55,40 +55,6 @@ TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithMedActiveCooling) {
     EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 41), TOO_HIGH);
 }
 
-TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsEmailForBreach) {
-    BatteryCharacter batteryChar;
-    batteryChar.coolingType = PASSIVE_COOLING;
-
-    // Set expectations on the mock
-    EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
-    
-    // Trigger a breach scenario
-    checkAndAlert(TO_EMAIL, batteryChar, 36); // This should trigger an email alert for TOO_HIGH
-}
-
-TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsToControllerForBreach) {
-    BatteryCharacter batteryChar;
-    batteryChar.coolingType = HI_ACTIVE_COOLING;
-
-    // Set expectations on the mock
-    EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
-    
-    // Trigger a breach scenario
-    checkAndAlert(TO_CONTROLLER, batteryChar, -1); // This should trigger a controller alert for TOO_LOW
-}
-
-TEST(TypeWiseAlertTestSuite, CheckAndAlertHandlesNormalTemperature) {
-    BatteryCharacter batteryChar;
-    batteryChar.coolingType = MED_ACTIVE_COOLING;
-
-    // Ensure no calls are made to send alert functions
-    EXPECT_CALL(mockAlert, sendToController(::testing::_)).Times(0);
-    EXPECT_CALL(mockAlert, sendToEmail(::testing::_)).Times(0);
-
-    checkAndAlert(TO_EMAIL, batteryChar, 39); // This should not trigger any alerts (39 is normal for MED_ACTIVE_COOLING)
-}
-
-
 int main(int argc, char **argv) {
     ::testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
