@@ -37,24 +37,6 @@ BreachType classifyTemperatureBreach(CoolingType coolingType, double temperature
     return inferBreach(temperatureInC, limits.lowerLimit, limits.upperLimit);
 }
 
-// Handle alert based on alert target
-void handleAlert(AlertTarget alertTarget, BreachType breachType) {
-    switch (alertTarget) {
-        case TO_CONTROLLER:
-            sendToController(breachType);
-            break;
-        case TO_EMAIL:
-            sendToEmail(breachType);
-            break;
-    }
-}
-
-// Main function to check and alert based on temperature and cooling type
-void checkAndAlert(AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
-    BreachType breachType = classifyTemperatureBreach(batteryChar.coolingType, temperatureInC);
-    handleAlert(alertTarget, breachType);
-}
-
 // Send alert to the controller
 void sendToController(BreachType breachType) {
     const unsigned short header = 0xfeed;
@@ -75,4 +57,19 @@ void sendToEmail(BreachType breachType) {
         printf("To: %s\n", recipient);
         printf("%s\n", messages[breachType]);
     }
+}
+
+// Handle alert based on alert target
+void handleAlert(AlertTarget alertTarget, BreachType breachType) {
+    if (alertTarget == TO_CONTROLLER) {
+        sendToController(breachType);
+    } else if (alertTarget == TO_EMAIL) {
+        sendToEmail(breachType);
+    }
+}
+
+// Main function to check and alert based on temperature and cooling type
+void checkAndAlert(AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
+    BreachType breachType = classifyTemperatureBreach(batteryChar.coolingType, temperatureInC);
+    handleAlert(alertTarget, breachType);
 }
