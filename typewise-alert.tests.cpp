@@ -1,21 +1,24 @@
 #include <gtest/gtest.h>
 #include "typewise-alert.h"
 
-// Use a flag to track calls for testing
-bool controller_called = false;
-bool email_called = false;
-BreachType last_breach_type;
+// Function pointer types for mocking
+void (*sendToControllerPtr)(BreachType) = sendToController; 
+void (*sendToEmailPtr)(BreachType) = sendToEmail;
 
+// Mock functions
 void sendToControllerMock(BreachType breachType) {
+    // Mock implementation
     controller_called = true;
     last_breach_type = breachType;
 }
 
 void sendToEmailMock(BreachType breachType) {
+    // Mock implementation
     email_called = true;
     last_breach_type = breachType;
 }
 
+// Test Suite
 TEST(TypeWiseAlertTestSuite, InfersBreachAccordingToLimits) {
     EXPECT_EQ(inferBreach(20, 50, 100), TOO_LOW);
     EXPECT_EQ(inferBreach(150, 50, 100), TOO_HIGH);
@@ -37,8 +40,8 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertForController) {
     batteryChar.coolingType = PASSIVE_COOLING;
     double temperatureInC = 36;
 
-    // Directly call the mock function
-    sendToController = sendToControllerMock; // Override the original function
+    // Use the mock function for the test
+    sendToControllerPtr = sendToControllerMock; // Point to mock
     checkAndAlert(TO_CONTROLLER, batteryChar, temperatureInC);
     
     EXPECT_TRUE(controller_called);
@@ -51,17 +54,16 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertForEmail) {
     batteryChar.coolingType = PASSIVE_COOLING;
     double temperatureInC = 34;
 
-    // Directly call the mock function
-    sendToEmail = sendToEmailMock; // Override the original function
+    // Use the mock function for the test
+    sendToEmailPtr = sendToEmailMock; // Point to mock
     checkAndAlert(TO_EMAIL, batteryChar, temperatureInC);
     
     EXPECT_TRUE(email_called);
     EXPECT_EQ(last_breach_type, NORMAL);
 }
 
-// Include other tests for different cooling types...
-
+// Main function to run the tests
 int main(int argc, char **argv) {
-    ::testing::InitGoogleMock(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv); // Correct initialization
     return RUN_ALL_TESTS();
 }
