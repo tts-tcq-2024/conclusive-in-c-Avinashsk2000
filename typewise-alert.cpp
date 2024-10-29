@@ -1,26 +1,46 @@
 #include "typewise-alert.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-// Temperature limit struct to define bounds for each cooling type
+// Enum for cooling types
+typedef enum {
+    PASSIVE_COOLING,
+    HI_ACTIVE_COOLING,
+    MED_ACTIVE_COOLING,
+    NUM_COOLING_TYPES // This serves as a count of cooling types
+} CoolingType;
+
+// Enum for breach types
+typedef enum {
+    NORMAL,
+    TOO_LOW,
+    TOO_HIGH
+} BreachType;
+
+// Struct to define temperature limits for each cooling type
 typedef struct {
     double lowerLimit;
     double upperLimit;
 } TemperatureLimits;
 
 // Temperature limits lookup table for each cooling type
-const TemperatureLimits coolingLimits[] = {
+const TemperatureLimits coolingLimits[NUM_COOLING_TYPES] = {
     {0, 35},  // PASSIVE_COOLING
     {0, 45},  // HI_ACTIVE_COOLING
     {0, 40}   // MED_ACTIVE_COOLING
 };
 
-// Retrieve temperature limits based on cooling type
+// Function to retrieve temperature limits based on cooling type
 TemperatureLimits getTemperatureLimits(CoolingType coolingType) {
+    if (coolingType < 0 || coolingType >= NUM_COOLING_TYPES) {
+        fprintf(stderr, "Error: Invalid cooling type.\n");
+        exit(EXIT_FAILURE);
+    }
     return coolingLimits[coolingType];
 }
 
-// Infer breach type based on limits
+// Function to infer breach type based on limits
 BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
     if (value < lowerLimit) {
         return TOO_LOW;
@@ -31,19 +51,19 @@ BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
     return NORMAL;
 }
 
-// Classify temperature breach based on cooling type and temperature
+// Function to classify temperature breach based on cooling type and temperature
 BreachType classifyTemperatureBreach(CoolingType coolingType, double temperatureInC) {
     TemperatureLimits limits = getTemperatureLimits(coolingType);
     return inferBreach(temperatureInC, limits.lowerLimit, limits.upperLimit);
 }
 
-// Send alert to the controller
+// Function to send alert to the controller
 void sendToController(BreachType breachType) {
     const unsigned short header = 0xfeed;
-    printf("%x : %x\n", header, breachType);
+    printf("Header: %x, Breach Type: %d\n", header, breachType);
 }
 
-// Send alert via email
+// Function to send alert via email
 void sendToEmail(BreachType breachType) {
     const char* recipient = "a.b@c.com";
     const char* messages[] = {
@@ -56,20 +76,45 @@ void sendToEmail(BreachType breachType) {
     if (breachType >= NORMAL && breachType <= TOO_HIGH) {
         printf("To: %s\n", recipient);
         printf("%s\n", messages[breachType]);
+    } else {
+        fprintf(stderr, "Error: Invalid breach type for email notification.\n");
     }
 }
 
-// Handle alert based on alert target
+// Function to handle alert based on alert target
 void handleAlert(AlertTarget alertTarget, BreachType breachType) {
     if (alertTarget == TO_CONTROLLER) {
         sendToController(breachType);
     } else if (alertTarget == TO_EMAIL) {
         sendToEmail(breachType);
+    } else {
+        fprintf(stderr, "Error: Invalid alert target.\n");
     }
 }
 
-// Main function to check and alert based on temperature and cooling type
-void checkAndAlert(AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
-    BreachType breachType = classifyTemperatureBreach(batteryChar.coolingType, temperatureInC);
+// Function to check and alert based on temperature and cooling type
+void checkAndAlert(AlertTarget alertTarget, BatteryCharacter* batteryChar, double temperatureInC) {
+    if (batteryChar == NULL) {
+        fprintf(stderr, "Error: BatteryCharacter pointer is NULL.\n");
+        return;
+    }
+
+    BreachType breachType = classifyTemperatureBreach(batteryChar->coolingType, temperatureInC);
     handleAlert(alertTarget, breachType);
+}
+
+// Example usage
+int main() {
+    // Simulate a battery character
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = HI_ACTIVE_COOLING;
+
+    // Simulate temperature readings
+    double temperatureInC = 50.0; // Example temperature
+    AlertTarget alertTarget = TO_EMAIL; // Example alert target
+
+    // Check and send alert
+    checkAndAlert(alertTarget, &batteryChar, temperatureInC);
+
+    return 0;
 }
