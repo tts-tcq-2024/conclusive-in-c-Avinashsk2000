@@ -62,8 +62,8 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsEmailForBreach) {
     // Set expectations on the mock
     EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
     
-    // Replace original function with the mock
-    checkAndAlert(TO_EMAIL, batteryChar, 36); // This should trigger an email alert
+    // Trigger a breach scenario
+    checkAndAlert(TO_EMAIL, batteryChar, 36); // This should trigger an email alert for TOO_HIGH
 }
 
 TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsToControllerForBreach) {
@@ -73,8 +73,8 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsToControllerForBreach) {
     // Set expectations on the mock
     EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
     
-    // Replace original function with the mock
-    checkAndAlert(TO_CONTROLLER, batteryChar, -1); // This should trigger a controller alert
+    // Trigger a breach scenario
+    checkAndAlert(TO_CONTROLLER, batteryChar, -1); // This should trigger a controller alert for TOO_LOW
 }
 
 TEST(TypeWiseAlertTestSuite, CheckAndAlertHandlesNormalTemperature) {
@@ -85,8 +85,9 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertHandlesNormalTemperature) {
     EXPECT_CALL(mockAlert, sendToController(::testing::_)).Times(0);
     EXPECT_CALL(mockAlert, sendToEmail(::testing::_)).Times(0);
 
-    checkAndAlert(TO_EMAIL, batteryChar, 38); // This should not trigger any alerts
+    checkAndAlert(TO_EMAIL, batteryChar, 39); // This should not trigger any alerts (39 is normal for MED_ACTIVE_COOLING)
 }
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleMock(&argc, argv);
