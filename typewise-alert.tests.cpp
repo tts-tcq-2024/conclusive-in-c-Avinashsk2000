@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 #include "typewise-alert.h"
 
-// Mocking functions to capture output
+// Mocking class to capture output
 class MockAlert {
 public:
     MOCK_METHOD(void, sendToController, (BreachType), ());
@@ -12,7 +12,7 @@ public:
 // Global instance of the mock class
 MockAlert mockAlert;
 
-// Redirects the actual alert functions to use the mock implementations
+// Redirect actual functions to mocks
 void sendToController(BreachType breachType) {
     mockAlert.sendToController(breachType);
 }
@@ -33,7 +33,6 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsEmailForHighTemperature) {
     batteryChar.coolingType = PASSIVE_COOLING;
 
     EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
-
     checkAndAlert(TO_EMAIL, batteryChar, 36);
 }
 
@@ -42,7 +41,6 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsControllerForLowTemperature) {
     batteryChar.coolingType = HI_ACTIVE_COOLING;
 
     EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
-
     checkAndAlert(TO_CONTROLLER, batteryChar, -1);
 }
 
@@ -52,7 +50,6 @@ TEST(TypeWiseAlertTestSuite, NoAlertForNormalTemperature) {
 
     EXPECT_CALL(mockAlert, sendToController(::testing::_)).Times(0);
     EXPECT_CALL(mockAlert, sendToEmail(::testing::_)).Times(0);
-
     checkAndAlert(TO_EMAIL, batteryChar, 39);
 }
 
