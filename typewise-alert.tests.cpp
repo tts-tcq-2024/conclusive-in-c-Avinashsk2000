@@ -20,16 +20,16 @@ TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsInvalidCoolingType) {
 // Test for getTemperatureLimits with valid cooling types
 TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsValidCoolingTypes) {
     TemperatureLimits limits = getTemperatureLimits(PASSIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 35);
+    EXPECT_EQ(limits.lower, 0);
+    EXPECT_EQ(limits.upper, 35);
 
     limits = getTemperatureLimits(HI_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 45);
+    EXPECT_EQ(limits.lower, 0);
+    EXPECT_EQ(limits.upper, 45);
 
     limits = getTemperatureLimits(MED_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 40);
+    EXPECT_EQ(limits.lower, 0);
+    EXPECT_EQ(limits.upper, 40);
 }
 
 // Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
@@ -79,7 +79,7 @@ TEST(TypeWiseAlertTestSuite, HandleAlertValidAndInvalidTargets) {
 TEST(TypeWiseAlertTestSuite, CheckAndAlertHighTemperature) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = HI_ACTIVE_COOLING;
-    
+
     EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
     checkAndAlert(TO_EMAIL, batteryChar, 46);  // Exceeds HI_ACTIVE_COOLING limit
 }
@@ -88,7 +88,7 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertHighTemperature) {
 TEST(TypeWiseAlertTestSuite, CheckAndAlertNormalTemperature) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
-    
+
     EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
     checkAndAlert(TO_EMAIL, batteryChar, 25);  // Within PASSIVE_COOLING limit
 }
@@ -97,7 +97,7 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertNormalTemperature) {
 TEST(TypeWiseAlertTestSuite, CheckAndAlertLowTemperature) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = MED_ACTIVE_COOLING;
-    
+
     EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
     checkAndAlert(TO_EMAIL, batteryChar, -5);  // Below MED_ACTIVE_COOLING limit
 }
