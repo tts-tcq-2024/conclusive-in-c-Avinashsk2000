@@ -1,5 +1,4 @@
 #include "typewise-alert.h"
-#include <stdio.h>  // Include for printf
 
 // Function to send alert to the controller
 void sendToController(BreachType breachType) {
