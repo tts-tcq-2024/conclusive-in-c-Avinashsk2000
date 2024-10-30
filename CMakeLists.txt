@@ -18,7 +18,6 @@ enable_testing()
 add_compile_options("--coverage")
 add_executable(
   cleancode
-  typewise-alert.h
   main.c
   temperature_limits.c
   breach_inference.c
