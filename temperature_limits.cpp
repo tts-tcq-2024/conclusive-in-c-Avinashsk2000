@@ -1,6 +1,4 @@
 #include "typewise-alert.h"
-#include <stdio.h>   // Include for fprintf and stderr
-#include <stdlib.h>  // Include for exit and EXIT_FAILURE
 
 // Temperature limits lookup table for each cooling type
 static const TemperatureLimits coolingLimits[] = {
