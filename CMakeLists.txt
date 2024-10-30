@@ -19,9 +19,6 @@ add_compile_options("--coverage")
 add_executable(
   cleancode
   main.c
-  temperature_limits.c
-  breach_inference.c
-  alert_handling.c
   typewise-alert.tests.cpp
 )
 target_link_libraries(
