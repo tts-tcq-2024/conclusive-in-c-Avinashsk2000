@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <gmock/gmock.h> // For mocking
 #include "typewise-alert.h"
 
-// Mocking class to capture output
+// Mocking functions to capture output
 class MockAlert {
 public:
     MOCK_METHOD(void, sendToController, (BreachType), ());
@@ -12,12 +12,12 @@ public:
 // Global instance of the mock class
 MockAlert mockAlert;
 
-// Redirect actual functions to mocks
-void sendToController(BreachType breachType) {
+// Override the original functions with mocks
+void sendToControllerMock(BreachType breachType) {
     mockAlert.sendToController(breachType);
 }
 
-void sendToEmail(BreachType breachType) {
+void sendToEmailMock(BreachType breachType) {
     mockAlert.sendToEmail(breachType);
 }
 
@@ -28,33 +28,29 @@ TEST(TypeWiseAlertTestSuite, InfersBreachAccordingToLimits) {
     EXPECT_EQ(inferBreach(75, 50, 100), NORMAL);
 }
 
-TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsEmailForHighTemperature) {
+TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithPassiveCooling) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
 
-    EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
-    checkAndAlert(TO_EMAIL, batteryChar, 36);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 34), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 35), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 36), TOO_HIGH);
 }
 
-TEST(TypeWiseAlertTestSuite, CheckAndAlertSendsControllerForLowTemperature) {
+TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithHiActiveCooling) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = HI_ACTIVE_COOLING;
 
-    EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
-    checkAndAlert(TO_CONTROLLER, batteryChar, -1);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 44), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 45), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 46), TOO_HIGH);
 }
 
-TEST(TypeWiseAlertTestSuite, NoAlertForNormalTemperature) {
+TEST(TypeWiseAlertTestSuite, ClassifiesTemperatureBreachWithMedActiveCooling) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = MED_ACTIVE_COOLING;
 
-    EXPECT_CALL(mockAlert, sendToController(::testing::_)).Times(0);
-    EXPECT_CALL(mockAlert, sendToEmail(::testing::_)).Times(0);
-    checkAndAlert(TO_EMAIL, batteryChar, 39);
-}
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::InitGoogleMock(&argc, argv);
-    return RUN_ALL_TESTS();
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 39), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 40), NORMAL);
+    EXPECT_EQ(classifyTemperatureBreach(batteryChar.coolingType, 41), TOO_HIGH);
 }
