@@ -32,11 +32,13 @@ TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsValidCoolingTypes) {
     EXPECT_EQ(limits.upperLimit, 40); 
 }
 
-// Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
+// Test inferBreach for TOO_LOW, NORMAL, TOO_HIGH cases, including edge cases
 TEST(TypeWiseAlertTestSuite, InferBreachCases) {
     EXPECT_EQ(inferBreach(10, 20, 30), TOO_LOW);     // Test TOO_LOW
     EXPECT_EQ(inferBreach(25, 20, 30), NORMAL);      // Test NORMAL
     EXPECT_EQ(inferBreach(35, 20, 30), TOO_HIGH);    // Test TOO_HIGH
+    EXPECT_EQ(inferBreach(20, 20, 30), NORMAL);      // Test boundary case (lower limit)
+    EXPECT_EQ(inferBreach(30, 20, 30), NORMAL);      // Test boundary case (upper limit)
 }
 
 // Test sendToController with breach type
@@ -101,3 +103,12 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertLowTemperature) {
     EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
     checkAndAlert(TO_EMAIL, batteryChar, -5);  // Below MED_ACTIVE_COOLING limit
 }
+
+// Test sendToEmail with a valid breach type directly to confirm print output
+TEST(TypeWiseAlertTestSuite, SendToEmailDirectly) {
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = PASSIVE_COOLING;
+    EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
+    sendToEmail(NORMAL);
+}
+
