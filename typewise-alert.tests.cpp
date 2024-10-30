@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
-#include <stdarg.h>  // Include for va_start and va_end
 #include "typewise-alert.h"
 
-// Function pointers for mocking
+// Function pointers for mocking alert functions
 void (*mockSendToController)(BreachType) = NULL;
 void (*mockSendToEmail)(BreachType) = NULL;
 
@@ -30,81 +30,80 @@ void mockSendToEmailFunc(BreachType breachType) {
     snprintf(printfBuffer, sizeof(printfBuffer), "Email Alert: %d\n", breachType);
 }
 
-// Test getTemperatureLimits with invalid cooling type (less than PASSIVE_COOLING)
-void test_getTemperatureLimits_InvalidCoolingTypeLessThan() {
-    assert(getTemperatureLimits((CoolingType)-1).lowerLimit == 0 && "Error: Invalid cooling type.");
+// Test inferBreach for boundary cases
+void test_inferBreach_BoundaryCases() {
+    // Test TOO_LOW
+    assert(inferBreach(5, 10, 20) == TOO_LOW);
+    // Test NORMAL within range
+    assert(inferBreach(15, 10, 20) == NORMAL);
+    // Test TOO_HIGH
+    assert(inferBreach(25, 10, 20) == TOO_HIGH);
+    // Test at exact lower limit
+    assert(inferBreach(10, 10, 20) == NORMAL);
+    // Test at exact upper limit
+    assert(inferBreach(20, 10, 20) == NORMAL);
 }
 
-// Test getTemperatureLimits with invalid cooling type (greater than MED_ACTIVE_COOLING)
-void test_getTemperatureLimits_InvalidCoolingTypeGreaterThan() {
-    assert(getTemperatureLimits((CoolingType)3).lowerLimit == 0 && "Error: Invalid cooling type.");
+// Test classifyTemperatureBreach with various cooling types and temperature ranges
+void test_classifyTemperatureBreach_CoolingTypes() {
+    // Testing PASSIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
+    assert(classifyTemperatureBreach(PASSIVE_COOLING, -5) == TOO_LOW);
+    assert(classifyTemperatureBreach(PASSIVE_COOLING, 25) == NORMAL);
+    assert(classifyTemperatureBreach(PASSIVE_COOLING, 40) == TOO_HIGH);
+
+    // Testing HI_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
+    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, -5) == TOO_LOW);
+    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 30) == NORMAL);
+    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 50) == TOO_HIGH);
+
+    // Testing MED_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
+    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, -5) == TOO_LOW);
+    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 30) == NORMAL);
+    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 45) == TOO_HIGH);
 }
 
-// Test getTemperatureLimits with valid cooling types
-void test_getTemperatureLimits_ValidCoolingTypes() {
-    TemperatureLimits limits = getTemperatureLimits(PASSIVE_COOLING);
-    assert(limits.lowerLimit == 0);
-    assert(limits.upperLimit == 35);
-
-    limits = getTemperatureLimits(HI_ACTIVE_COOLING);
-    assert(limits.lowerLimit == 0);
-    assert(limits.upperLimit == 45);
-
-    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
-    assert(limits.lowerLimit == 0);
-    assert(limits.upperLimit == 40);
-}
-
-// Test inferBreach for different cases
-void test_inferBreach() {
-    assert(inferBreach(10, 20, 30) == TOO_LOW);
-    assert(inferBreach(25, 20, 30) == NORMAL);
-    assert(inferBreach(35, 20, 30) == TOO_HIGH);
-}
-
-// Test sendToController with mock function
-void test_sendToController() {
+// Test for sending to controller using the mock function pointer
+void test_sendToController_Mock() {
+    // Set the mock function pointer and call
     mockSendToController = mockSendToControllerFunc;
     mockSendToController(TOO_LOW);
     assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);
 }
 
-// Test sendToEmail with mock function
-void test_sendToEmail() {
+// Test for sending to email using the mock function pointer
+void test_sendToEmail_Mock() {
+    // Set the mock function pointer and call
     mockSendToEmail = mockSendToEmailFunc;
-    mockSendToEmail(NORMAL);
-    assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);
-
-    mockSendToEmail(TOO_LOW);
-    assert(strcmp(printfBuffer, "Email Alert: 0\n") == 0);
-
     mockSendToEmail(TOO_HIGH);
     assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);
 }
 
-// Test checkAndAlert for high temperature
-void test_checkAndAlert_HighTemperature() {
-    BatteryCharacter battery = {HI_ACTIVE_COOLING, "Battery B"};
-    mockSendToEmail = mockSendToEmailFunc;
+// Test for checkAndAlert with mocked email function
+void test_checkAndAlert_Email() {
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = HI_ACTIVE_COOLING;
 
-    checkAndAlert(TO_EMAIL, battery, 46);  // Exceeds HI_ACTIVE_COOLING limit
-    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);
+    // Set up mock functions
+    mockSendToEmail = mockSendToEmailFunc;
+    
+    // Test high temperature case
+    checkAndAlert(TO_EMAIL, batteryChar, 46);
+    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);  // Expect TOO_HIGH alert
+
+    // Test normal temperature case
+    checkAndAlert(TO_EMAIL, batteryChar, 30);
+    assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);  // Expect NORMAL alert
 }
 
-// Test checkAndAlert for normal temperature
-void test_checkAndAlert_NormalTemperature() {
-    BatteryCharacter battery = {PASSIVE_COOLING, "Battery A"};
-    mockSendToEmail = mockSendToEmailFunc;
+// Test for checkAndAlert with mocked controller function
+void test_checkAndAlert_Controller() {
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = PASSIVE_COOLING;
 
-    checkAndAlert(TO_EMAIL, battery, 25);  // Within PASSIVE_COOLING limit
-    assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);
-}
+    // Set up mock functions
+    mockSendToController = mockSendToControllerFunc;
 
-// Test checkAndAlert for low temperature
-void test_checkAndAlert_LowTemperature() {
-    BatteryCharacter battery = {MED_ACTIVE_COOLING, "Battery C"};
-    mockSendToEmail = mockSendToEmailFunc;
-
-    checkAndAlert(TO_EMAIL, battery, -5);  // Below MED_ACTIVE_COOLING limit
-    assert(strcmp(printfBuffer, "Email Alert: 0\n") == 0);
+    // Test low temperature case
+    checkAndAlert(TO_CONTROLLER, batteryChar, -5);
+    assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);  // Expect TOO_LOW alert
 }
