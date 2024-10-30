@@ -18,7 +18,7 @@ enable_testing()
 add_compile_options("--coverage")
 add_executable(
   cleancode
-  typewise-alert.cpp
+  typewise-alert.c
   typewise-alert.tests.cpp
 )
 target_link_libraries(
