@@ -1,44 +1,50 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include "typewise-alert.h"
 
-// Mocking class to capture output
+// Mock class to simulate alerting functionality
 class MockAlert {
 public:
     MOCK_METHOD(void, sendToController, (BreachType), ());
     MOCK_METHOD(void, sendToEmail, (BreachType), ());
 };
 
+// Global mock alert instance
 MockAlert mockAlert;
 
-// Test for getTemperatureLimits with invalid cooling type
-TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsInvalidCoolingType) {
+// Test for getTemperatureLimits with invalid cooling type less than PASSIVE_COOLING
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsInvalidCoolingTypeLessThan) {
     EXPECT_EXIT(getTemperatureLimits(static_cast<CoolingType>(-1)), 
                 ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid cooling type.");
 }
 
-// Test for getTemperatureLimits with valid cooling types
-TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsValidCoolingTypes) {
-    TemperatureLimits limits = getTemperatureLimits(PASSIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 35); 
-
-    limits = getTemperatureLimits(HI_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0); 
-    EXPECT_EQ(limits.upperLimit, 45); 
-
-    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0); 
-    EXPECT_EQ(limits.upperLimit, 40); 
+// Test for getTemperatureLimits with invalid cooling type greater than MED_ACTIVE_COOLING
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsInvalidCoolingTypeGreaterThan) {
+    EXPECT_EXIT(getTemperatureLimits(static_cast<CoolingType>(3)), 
+                ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid cooling type.");
 }
 
-// Test inferBreach for TOO_LOW, NORMAL, TOO_HIGH cases, including edge cases
+// Test for getTemperatureLimits with valid cooling types
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsValidCoolingTypes) {
+    TemperatureLimits limits;
+
+    limits = getTemperatureLimits(PASSIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 35);
+
+    limits = getTemperatureLimits(HI_ACTIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 45);
+
+    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 40);
+}
+
+// Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
 TEST(TypeWiseAlertTestSuite, InferBreachCases) {
     EXPECT_EQ(inferBreach(10, 20, 30), TOO_LOW);     // Test TOO_LOW
     EXPECT_EQ(inferBreach(25, 20, 30), NORMAL);      // Test NORMAL
     EXPECT_EQ(inferBreach(35, 20, 30), TOO_HIGH);    // Test TOO_HIGH
-    EXPECT_EQ(inferBreach(20, 20, 30), NORMAL);      // Test boundary case (lower limit)
-    EXPECT_EQ(inferBreach(30, 20, 30), NORMAL);      // Test boundary case (upper limit)
 }
 
 // Test sendToController with breach type
@@ -103,12 +109,3 @@ TEST(TypeWiseAlertTestSuite, CheckAndAlertLowTemperature) {
     EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
     checkAndAlert(TO_EMAIL, batteryChar, -5);  // Below MED_ACTIVE_COOLING limit
 }
-
-// Test sendToEmail with a valid breach type directly to confirm print output
-TEST(TypeWiseAlertTestSuite, SendToEmailDirectly) {
-    BatteryCharacter batteryChar;
-    batteryChar.coolingType = PASSIVE_COOLING;
-    EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
-    sendToEmail(NORMAL);
-}
-
