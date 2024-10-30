@@ -3,12 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Struct to define temperature limits for each cooling type
-typedef struct {
-    double lowerLimit;
-    double upperLimit;
-} TemperatureLimits;
-
 // Temperature limits lookup table for each cooling type
 const TemperatureLimits coolingLimits[] = {
     {0, 35},  // PASSIVE_COOLING
