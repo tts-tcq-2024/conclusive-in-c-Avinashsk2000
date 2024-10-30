@@ -1,5 +1,4 @@
 #include "typewise-alert.h"
-#include <stdio.h>  // Include for fprintf (if used)
 
 // Function to infer breach type based on limits
 BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
