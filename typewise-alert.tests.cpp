@@ -20,16 +20,16 @@ TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsInvalidCoolingType) {
 // Test for getTemperatureLimits with valid cooling types
 TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsValidCoolingTypes) {
     TemperatureLimits limits = getTemperatureLimits(PASSIVE_COOLING);
-    EXPECT_EQ(limits.lower, 0);
-    EXPECT_EQ(limits.upper, 35);
+    EXPECT_EQ(limits.lowerLimit, 0); // Corrected from 'limits.lower' to 'limits.lowerLimit'
+    EXPECT_EQ(limits.upperLimit, 35); // Corrected from 'limits.upper' to 'limits.upperLimit'
 
     limits = getTemperatureLimits(HI_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lower, 0);
-    EXPECT_EQ(limits.upper, 45);
+    EXPECT_EQ(limits.lowerLimit, 0); // Corrected
+    EXPECT_EQ(limits.upperLimit, 45); // Corrected
 
     limits = getTemperatureLimits(MED_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lower, 0);
-    EXPECT_EQ(limits.upper, 40);
+    EXPECT_EQ(limits.lowerLimit, 0); // Corrected
+    EXPECT_EQ(limits.upperLimit, 40); // Corrected
 }
 
 // Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
