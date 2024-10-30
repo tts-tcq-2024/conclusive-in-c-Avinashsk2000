@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include "typewise-alert.h"
 
 // Mock class to simulate alerting functionality
@@ -50,24 +51,24 @@ TEST(TypeWiseAlertTestSuite, InferBreachCases) {
 // Test sendToController with breach type
 TEST(TypeWiseAlertTestSuite, SendToControllerWithBreachType) {
     EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
-    sendToController(TOO_LOW);
+    mockAlert.sendToController(TOO_LOW);
 }
 
 // Test sendToEmail with valid breach types
 TEST(TypeWiseAlertTestSuite, SendToEmailValidBreachTypes) {
     EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
-    sendToEmail(NORMAL);
+    mockAlert.sendToEmail(NORMAL);
 
     EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
-    sendToEmail(TOO_LOW);
+    mockAlert.sendToEmail(TOO_LOW);
 
     EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
-    sendToEmail(TOO_HIGH);
+    mockAlert.sendToEmail(TOO_HIGH);
 }
 
 // Test sendToEmail with invalid breach type
 TEST(TypeWiseAlertTestSuite, SendToEmailInvalidBreachType) {
-    EXPECT_EXIT(sendToEmail(static_cast<BreachType>(-1)), 
+    EXPECT_EXIT(mockAlert.sendToEmail(static_cast<BreachType>(-1)), 
                 ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid breach type for email notification.");
 }
 
