@@ -11,15 +11,6 @@ public:
 
 MockAlert mockAlert;
 
-// Override send functions with mocks for testing
-void sendToController(BreachType breachType) {
-    mockAlert.sendToController(breachType);
-}
-
-void sendToEmail(BreachType breachType) {
-    mockAlert.sendToEmail(breachType);
-}
-
 // Test for getTemperatureLimits with invalid cooling type
 TEST(TypeWiseAlertTestSuite, GetTemperatureLimitsInvalidCoolingType) {
     EXPECT_EXIT(getTemperatureLimits(static_cast<CoolingType>(-1)), 
