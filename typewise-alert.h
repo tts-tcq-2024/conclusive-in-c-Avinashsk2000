@@ -10,6 +10,12 @@ typedef enum {
     TOO_HIGH
 } BreachType;
 
+// Struct to define temperature limits for each cooling type
+typedef struct {
+    double lowerLimit;
+    double upperLimit;
+} TemperatureLimits;
+
 BreachType inferBreach(double value, double lowerLimit, double upperLimit);
 BreachType classifyTemperatureBreach(CoolingType coolingType, double temperatureInC);
 
