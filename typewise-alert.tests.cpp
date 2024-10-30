@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>  // Include for va_start and va_end
 #include "typewise-alert.h"
 
 // Function pointers for mocking
@@ -31,12 +32,12 @@ void mockSendToEmailFunc(BreachType breachType) {
 
 // Test getTemperatureLimits with invalid cooling type (less than PASSIVE_COOLING)
 void test_getTemperatureLimits_InvalidCoolingTypeLessThan() {
-    assert(getTemperatureLimits(-1).lowerLimit == 0 && "Error: Invalid cooling type.");
+    assert(getTemperatureLimits((CoolingType)-1).lowerLimit == 0 && "Error: Invalid cooling type.");
 }
 
 // Test getTemperatureLimits with invalid cooling type (greater than MED_ACTIVE_COOLING)
 void test_getTemperatureLimits_InvalidCoolingTypeGreaterThan() {
-    assert(getTemperatureLimits(3).lowerLimit == 0 && "Error: Invalid cooling type.");
+    assert(getTemperatureLimits((CoolingType)3).lowerLimit == 0 && "Error: Invalid cooling type.");
 }
 
 // Test getTemperatureLimits with valid cooling types
