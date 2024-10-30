@@ -11,7 +11,6 @@ static const TemperatureLimits coolingLimits[] = {
 TemperatureLimits getTemperatureLimits(CoolingType coolingType) {
     if (coolingType < PASSIVE_COOLING || coolingType > MED_ACTIVE_COOLING) {
         fprintf(stderr, "Error: Invalid cooling type.\n");
-        exit(EXIT_FAILURE);
     }
     return coolingLimits[coolingType];
 }
