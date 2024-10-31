@@ -20,6 +20,8 @@ typedef struct {
     double upperLimit;
 } TemperatureLimits;
 
+// Declare the function pointer as extern
+extern void (*outputToController)(const char*, unsigned short, int);
 BreachType inferBreach(double value, double lowerLimit, double upperLimit);
 BreachType classifyTemperatureBreach(CoolingType coolingType, double temperatureInC);
 
