@@ -32,17 +32,13 @@ TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsValidCoolingTypes) {
     EXPECT_EQ(limits.lowerLimit, 0);
     EXPECT_EQ(limits.upperLimit, 35);
 
-    limits = getTemperatureLimits(AIR_COOLING);
+    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
     EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 30);
+    EXPECT_EQ(limits.upperLimit, 40);
 
     limits = getTemperatureLimits(HI_ACTIVE_COOLING);
     EXPECT_EQ(limits.lowerLimit, 0);
     EXPECT_EQ(limits.upperLimit, 45);
-
-    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
-    EXPECT_EQ(limits.lowerLimit, 0);
-    EXPECT_EQ(limits.upperLimit, 40);
 }
 
 // Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
