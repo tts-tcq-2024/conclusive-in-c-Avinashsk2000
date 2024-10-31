@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "typewise-alert.h"
-
+ 
 // Function pointers for mocking alert functions
 void (*mockSendToController)(BreachType) = NULL;
 void (*mockSendToEmail)(BreachType) = NULL;
