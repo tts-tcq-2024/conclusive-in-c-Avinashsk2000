@@ -1,5 +1,5 @@
 #include "typewise-alert.h"
-
+ 
 // Function to infer breach type based on limits
 BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
     if (value < lowerLimit) {
