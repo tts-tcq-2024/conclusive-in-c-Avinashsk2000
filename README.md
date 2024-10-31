@@ -46,7 +46,7 @@ You have seen a few workflows in this repository. They are quality-gates to prev
 
 During the next four weeks, what improvement do you plan in your code-quality practice? (in your regular work, not in this repository!)
 
-## During the next four weeks, I plan to enhance my code-quality practices by focusing on the following areas:
+### During the next four weeks, I plan to enhance my code-quality practices by focusing on the following areas:
 
 - Modularity: I will aim to structure my code into smaller, self-contained modules, making it easier to maintain and extend.
 
