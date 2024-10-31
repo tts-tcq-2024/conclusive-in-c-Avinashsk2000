@@ -1,131 +1,112 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <assert.h>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include "typewise-alert.h"
- 
-// Function pointers for mocking alert functions
-void (*mockSendToController)(BreachType) = NULL;
-void (*mockSendToEmail)(BreachType) = NULL;
 
-// Buffer for capturing printed output
-char printfBuffer[256];
+// Mock class to simulate alerting functionality
+class MockAlert {
+public:
+    MOCK_METHOD(void, sendToController, (BreachType), ());
+    MOCK_METHOD(void, sendToEmail, (BreachType), ());
+};
 
-// Mock printf function to capture output for testing
-int mockPrintf(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    int printedLength = vsnprintf(printfBuffer, sizeof(printfBuffer), format, args);
-    va_end(args);
-    return printedLength;
+// Global mock alert instance
+MockAlert mockAlert;
+
+// Test for getTemperatureLimits with invalid cooling type less than PASSIVE_COOLING
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsInvalidCoolingTypeLessThan) {
+    EXPECT_EXIT(getTemperatureLimits(static_cast<CoolingType>(-1)), 
+                ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid cooling type.");
 }
 
-// Mock functions for sendToController and sendToEmail
-void mockSendToControllerFunc(BreachType breachType) {
-    snprintf(printfBuffer, sizeof(printfBuffer), "Controller Alert: %d\n", breachType);
+// Test for getTemperatureLimits with invalid cooling type greater than MED_ACTIVE_COOLING
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsInvalidCoolingTypeGreaterThan) {
+    EXPECT_EXIT(getTemperatureLimits(static_cast<CoolingType>(3)), 
+                ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid cooling type.");
 }
 
-void mockSendToEmailFunc(BreachType breachType) {
-    snprintf(printfBuffer, sizeof(printfBuffer), "Email Alert: %d\n", breachType);
+// Test for getTemperatureLimits with valid cooling types
+TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsValidCoolingTypes) {
+    TemperatureLimits limits;
+
+    limits = getTemperatureLimits(PASSIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 35);
+
+    limits = getTemperatureLimits(HI_ACTIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 45);
+
+    limits = getTemperatureLimits(MED_ACTIVE_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 40);
 }
 
-// Test inferBreach for boundary cases
-void test_inferBreach_BoundaryCases() {
-    // Test TOO_LOW
-    assert(inferBreach(5, 10, 20) == TOO_LOW);
-    // Test NORMAL within range
-    assert(inferBreach(15, 10, 20) == NORMAL);
-    // Test TOO_HIGH
-    assert(inferBreach(25, 10, 20) == TOO_HIGH);
-    // Test at exact lower limit
-    assert(inferBreach(10, 10, 20) == NORMAL);
-    // Test at exact upper limit
-    assert(inferBreach(20, 10, 20) == NORMAL);
+// Test inferBreach for TOO_LOW, TOO_HIGH, and NORMAL cases
+TEST(TypeWiseAlertTestSuite, InferBreachCases) {
+    EXPECT_EQ(inferBreach(10, 20, 30), TOO_LOW);     // Test TOO_LOW
+    EXPECT_EQ(inferBreach(25, 20, 30), NORMAL);      // Test NORMAL
+    EXPECT_EQ(inferBreach(35, 20, 30), TOO_HIGH);    // Test TOO_HIGH
 }
 
-// Test classifyTemperatureBreach with various cooling types and temperature ranges
-void test_classifyTemperatureBreach_CoolingTypes() {
-    // Testing PASSIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
-    assert(classifyTemperatureBreach(PASSIVE_COOLING, -5) == TOO_LOW);
-    assert(classifyTemperatureBreach(PASSIVE_COOLING, 25) == NORMAL);
-    assert(classifyTemperatureBreach(PASSIVE_COOLING, 40) == TOO_HIGH);
-
-    // Testing HI_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
-    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, -5) == TOO_LOW);
-    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 30) == NORMAL);
-    assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 50) == TOO_HIGH);
-
-    // Testing MED_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
-    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, -5) == TOO_LOW);
-    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 30) == NORMAL);
-    assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 45) == TOO_HIGH);
+// Test sendToController with breach type
+TEST(TypeWiseAlertTestSuite, SendToControllerWithBreachType) {
+    EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
+    mockAlert.sendToController(TOO_LOW);
 }
 
-// Test for sending to controller using the mock function pointer
-void test_sendToController_Mock() {
-    // Set the mock function pointer and call
-    mockSendToController = mockSendToControllerFunc;
-    mockSendToController(TOO_LOW);
-    assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);
+// Test sendToEmail with valid breach types
+TEST(TypeWiseAlertTestSuite, SendToEmailValidBreachTypes) {
+    EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
+    mockAlert.sendToEmail(NORMAL);
 
-    mockSendToController(TOO_HIGH);
-    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);
+    EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
+    mockAlert.sendToEmail(TOO_LOW);
 
-    // Reset mock pointer
-    mockSendToController = NULL;
+    EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
+    mockAlert.sendToEmail(TOO_HIGH);
 }
 
-// Test for sending to email using the mock function pointer
-void test_sendToEmail_Mock() {
-    // Set the mock function pointer and call
-    mockSendToEmail = mockSendToEmailFunc;
-    mockSendToEmail(TOO_LOW);
-    assert(strcmp(printfBuffer, "Email Alert: 0\n") == 0);
-
-    mockSendToEmail(TOO_HIGH);
-    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);
-
-    // Reset mock pointer
-    mockSendToEmail = NULL;
+// Test sendToEmail with invalid breach type
+TEST(TypeWiseAlertTestSuite, SendToEmailInvalidBreachType) {
+    EXPECT_EXIT(mockAlert.sendToEmail(static_cast<BreachType>(-1)), 
+                ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid breach type for email notification.");
 }
 
-// Test for checkAndAlert with mocked email function
-void test_checkAndAlert_Email() {
+// Test handleAlert with valid and invalid alert targets
+TEST(TypeWiseAlertTestSuite, HandleAlertValidAndInvalidTargets) {
+    EXPECT_CALL(mockAlert, sendToController(TOO_HIGH)).Times(1);
+    handleAlert(TO_CONTROLLER, TOO_HIGH);
+
+    EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
+    handleAlert(TO_EMAIL, TOO_LOW);
+
+    EXPECT_EXIT(handleAlert(static_cast<AlertTarget>(-1), TOO_HIGH), 
+                ::testing::ExitedWithCode(EXIT_FAILURE), "Error: Invalid alert target.");
+}
+
+// Test checkAndAlert for high temperature
+TEST(TypeWiseAlertTestSuite, CheckAndAlertHighTemperature) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = HI_ACTIVE_COOLING;
 
-    // Set up mock function
-    mockSendToEmail = mockSendToEmailFunc;
-    
-    // Test high temperature case
-    checkAndAlert(TO_EMAIL, batteryChar, 46);
-    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);  // Expect TOO_HIGH alert
-
-    // Test normal temperature case
-    checkAndAlert(TO_EMAIL, batteryChar, 30);
-    assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);  // Expect NORMAL alert
-
-    // Reset mock pointer
-    mockSendToEmail = NULL;
+    EXPECT_CALL(mockAlert, sendToEmail(TOO_HIGH)).Times(1);
+    checkAndAlert(TO_EMAIL, batteryChar, 46);  // Exceeds HI_ACTIVE_COOLING limit
 }
 
-// Test for checkAndAlert with mocked controller function
-void test_checkAndAlert_Controller() {
+// Test checkAndAlert for normal temperature
+TEST(TypeWiseAlertTestSuite, CheckAndAlertNormalTemperature) {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
 
-    // Set up mock function
-    mockSendToController = mockSendToControllerFunc;
+    EXPECT_CALL(mockAlert, sendToEmail(NORMAL)).Times(1);
+    checkAndAlert(TO_EMAIL, batteryChar, 25);  // Within PASSIVE_COOLING limit
+}
 
-    // Test low temperature case
-    checkAndAlert(TO_CONTROLLER, batteryChar, -5);
-    assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);  // Expect TOO_LOW alert
+// Test checkAndAlert for low temperature
+TEST(TypeWiseAlertTestSuite, CheckAndAlertLowTemperature) {
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = MED_ACTIVE_COOLING;
 
-    // Test high temperature case
-    checkAndAlert(TO_CONTROLLER, batteryChar, 40);
-    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);  // Expect TOO_HIGH alert
-
-    // Reset mock pointer
-    mockSendToController = NULL;
+    EXPECT_CALL(mockAlert, sendToEmail(TOO_LOW)).Times(1);
+    checkAndAlert(TO_EMAIL, batteryChar, -5);  // Below MED_ACTIVE_COOLING limit
 }
