@@ -1,131 +1,106 @@
+// test_alert_handling.cpp
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <assert.h>
 #include "typewise-alert.h"
 
-// Function pointers for mocking alert functions
-void (*mockSendToController)(BreachType) = NULL;
-void (*mockSendToEmail)(BreachType) = NULL;
-
-// Buffer for capturing printed output
+// Buffers for capturing outputs for controller and email alerts
 char printfBuffer[256];
 
-// Mock printf function to capture output for testing
-int mockPrintf(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    int printedLength = vsnprintf(printfBuffer, sizeof(printfBuffer), format, args);
-    va_end(args);
-    return printedLength;
+// Mock implementation of output functions
+void mockOutputToController(unsigned short header, BreachType breachType) {
+    snprintf(printfBuffer, sizeof(printfBuffer), "Header: %x, Breach Type: %d\n", header, breachType);
 }
 
-// Mock functions for sendToController and sendToEmail
-void mockSendToControllerFunc(BreachType breachType) {
-    snprintf(printfBuffer, sizeof(printfBuffer), "Controller Alert: %d\n", breachType);
+void mockOutputToEmail(const char* recipient, const char* message) {
+    snprintf(printfBuffer, sizeof(printfBuffer), "To: %s\n%s\n", recipient, message);
 }
 
-void mockSendToEmailFunc(BreachType breachType) {
-    snprintf(printfBuffer, sizeof(printfBuffer), "Email Alert: %d\n", breachType);
+// Test for `sendToController` using the mock output function
+void test_sendToController() {
+    // Substitute real output with mock function
+    outputToController = mockOutputToController;
+
+    // Test for TOO_LOW breach type
+    sendToController(TOO_LOW);
+    assert(strcmp(printfBuffer, "Header: feed, Breach Type: 0\n") == 0);
+
+    // Test for TOO_HIGH breach type
+    sendToController(TOO_HIGH);
+    assert(strcmp(printfBuffer, "Header: feed, Breach Type: 2\n") == 0);
 }
 
-// Test inferBreach for boundary cases
+// Test for `sendToEmail` using the mock output function
+void test_sendToEmail() {
+    // Substitute real email output with mock function
+    outputToEmail = mockOutputToEmail;
+
+    // Test for NORMAL breach type
+    sendToEmail(NORMAL);
+    assert(strcmp(printfBuffer, "To: a.b@c.com\nHi, the temperature is normal\n") == 0);
+
+    // Test for TOO_LOW breach type
+    sendToEmail(TOO_LOW);
+    assert(strcmp(printfBuffer, "To: a.b@c.com\nHi, the temperature is too low\n") == 0);
+
+    // Test for TOO_HIGH breach type
+    sendToEmail(TOO_HIGH);
+    assert(strcmp(printfBuffer, "To: a.b@c.com\nHi, the temperature is too high\n") == 0);
+}
+
+// Test for `inferBreach` boundary cases
 void test_inferBreach_BoundaryCases() {
-    // Test TOO_LOW
-    assert(inferBreach(5, 10, 20) == TOO_LOW);
-    // Test NORMAL within range
-    assert(inferBreach(15, 10, 20) == NORMAL);
-    // Test TOO_HIGH
-    assert(inferBreach(25, 10, 20) == TOO_HIGH);
-    // Test at exact lower limit
-    assert(inferBreach(10, 10, 20) == NORMAL);
-    // Test at exact upper limit
-    assert(inferBreach(20, 10, 20) == NORMAL);
+    assert(inferBreach(5, 10, 20) == TOO_LOW);    // TOO_LOW case
+    assert(inferBreach(15, 10, 20) == NORMAL);    // NORMAL within range
+    assert(inferBreach(25, 10, 20) == TOO_HIGH);  // TOO_HIGH case
+    assert(inferBreach(10, 10, 20) == NORMAL);    // Boundary check at lower limit
+    assert(inferBreach(20, 10, 20) == NORMAL);    // Boundary check at upper limit
 }
 
-// Test classifyTemperatureBreach with various cooling types and temperature ranges
+// Test `classifyTemperatureBreach` for each cooling type and boundary conditions
 void test_classifyTemperatureBreach_CoolingTypes() {
-    // Testing PASSIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
     assert(classifyTemperatureBreach(PASSIVE_COOLING, -5) == TOO_LOW);
     assert(classifyTemperatureBreach(PASSIVE_COOLING, 25) == NORMAL);
     assert(classifyTemperatureBreach(PASSIVE_COOLING, 40) == TOO_HIGH);
 
-    // Testing HI_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
     assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, -5) == TOO_LOW);
     assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 30) == NORMAL);
     assert(classifyTemperatureBreach(HI_ACTIVE_COOLING, 50) == TOO_HIGH);
 
-    // Testing MED_ACTIVE_COOLING for TOO_LOW, NORMAL, and TOO_HIGH
     assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, -5) == TOO_LOW);
     assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 30) == NORMAL);
     assert(classifyTemperatureBreach(MED_ACTIVE_COOLING, 45) == TOO_HIGH);
 }
 
-// Test for sending to controller using the mock function pointer
-void test_sendToController_Mock() {
-    // Set the mock function pointer and call
-    mockSendToController = mockSendToControllerFunc;
-    mockSendToController(TOO_LOW);
-    assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);
-
-    mockSendToController(TOO_HIGH);
-    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);
-
-    // Reset mock pointer
-    mockSendToController = NULL;
-}
-
-// Test for sending to email using the mock function pointer
-void test_sendToEmail_Mock() {
-    // Set the mock function pointer and call
-    mockSendToEmail = mockSendToEmailFunc;
-    mockSendToEmail(TOO_LOW);
-    assert(strcmp(printfBuffer, "Email Alert: 0\n") == 0);
-
-    mockSendToEmail(TOO_HIGH);
-    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);
-
-    // Reset mock pointer
-    mockSendToEmail = NULL;
-}
-
-// Test for checkAndAlert with mocked email function
-void test_checkAndAlert_Email() {
-    BatteryCharacter batteryChar;
-    batteryChar.coolingType = HI_ACTIVE_COOLING;
-
-    // Set up mock function
-    mockSendToEmail = mockSendToEmailFunc;
-    
-    // Test high temperature case
-    checkAndAlert(TO_EMAIL, batteryChar, 46);
-    assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);  // Expect TOO_HIGH alert
-
-    // Test normal temperature case
-    checkAndAlert(TO_EMAIL, batteryChar, 30);
-    assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);  // Expect NORMAL alert
-
-    // Reset mock pointer
-    mockSendToEmail = NULL;
-}
-
-// Test for checkAndAlert with mocked controller function
+// Test `checkAndAlert` for different alert targets using mock functions
 void test_checkAndAlert_Controller() {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
 
-    // Set up mock function
-    mockSendToController = mockSendToControllerFunc;
+    // Substitute real controller output with mock function
+    outputToController = mockOutputToController;
 
     // Test low temperature case
     checkAndAlert(TO_CONTROLLER, batteryChar, -5);
-    assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);  // Expect TOO_LOW alert
+    assert(strcmp(printfBuffer, "Header: feed, Breach Type: 0\n") == 0);  // Expect TOO_LOW alert
 
     // Test high temperature case
     checkAndAlert(TO_CONTROLLER, batteryChar, 40);
-    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);  // Expect TOO_HIGH alert
+    assert(strcmp(printfBuffer, "Header: feed, Breach Type: 2\n") == 0);  // Expect TOO_HIGH alert
+}
 
-    // Reset mock pointer
-    mockSendToController = NULL;
+void test_checkAndAlert_Email() {
+    BatteryCharacter batteryChar;
+    batteryChar.coolingType = HI_ACTIVE_COOLING;
+
+    // Substitute real email output with mock function
+    outputToEmail = mockOutputToEmail;
+
+    // Test high temperature case
+    checkAndAlert(TO_EMAIL, batteryChar, 46);
+    assert(strcmp(printfBuffer, "To: a.b@c.com\nHi, the temperature is too high\n") == 0);  // Expect TOO_HIGH alert
+
+    // Test normal temperature case
+    checkAndAlert(TO_EMAIL, batteryChar, 30);
+    assert(strcmp(printfBuffer, "To: a.b@c.com\nHi, the temperature is normal\n") == 0);  // Expect NORMAL alert
 }
