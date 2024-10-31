@@ -48,10 +48,28 @@ TEST(TypeWiseAlertTestSuite, InferBreachCases) {
     EXPECT_EQ(inferBreach(35, 20, 30), TOO_HIGH);    // Test TOO_HIGH
 }
 
-// Test sendToController with breach type
+// Mock function to capture output for testing
+void mockOutputToController(const char* format, unsigned short header, int breachType) {
+    printf("Mocked Controller Output - Header: %x, Breach Type: %d\n", header, breachType);
+}
+
+// Test case for sendToController
 TEST(TypeWiseAlertTestSuite, SendToControllerWithBreachType) {
-    EXPECT_CALL(mockAlert, sendToController(TOO_LOW)).Times(1);
-    mockAlert.sendToController(TOO_LOW);
+    // Redirect outputToController to the mock function
+    outputToController = mockOutputToController;
+
+    // Expected output using the mock function
+    testing::internal::CaptureStdout();
+    sendToController(TOO_LOW);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    // Check that the mocked output appears as expected
+    EXPECT_NE(output.find("Mocked Controller Output - Header: feed, Breach Type: 1"), std::string::npos);
+
+    // Restore outputToController to its original state if needed
+    outputToController = [](const char* format, unsigned short header, int breachType) {
+        printf(format, header, breachType);
+    };
 }
 
 // Test sendToEmail with valid breach types
