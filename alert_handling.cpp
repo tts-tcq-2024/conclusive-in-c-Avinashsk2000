@@ -1,14 +1,13 @@
 #include "typewise-alert.h"
-#include <cstdio>
-
-// Define the output function pointer, defaulting to `printf`
-void (*outputToController)(const char*, unsigned short, int) = [](const char* format, unsigned short header, int breachType) {
-    printf(format, header, breachType);
-};
 
 // Function to send alert to the controller
 void sendToController(BreachType breachType) {
     const unsigned short header = 0xfeed;
+    printf("Header: %x, Breach Type: %d\n", header, breachType);
+}
+// Function to send alert via email
+void sendToEmail(BreachType breachType) {
+    const char* recipient = "a.b@c.com";
     outputToController("Header: %x, Breach Type: %d\n", header, breachType);
 }
 // Function to send alert via email
