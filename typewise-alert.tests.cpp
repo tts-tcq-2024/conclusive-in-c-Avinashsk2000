@@ -32,6 +32,10 @@ TEST(TemperatureLimitsTestSuite, GetTemperatureLimitsValidCoolingTypes) {
     EXPECT_EQ(limits.lowerLimit, 0);
     EXPECT_EQ(limits.upperLimit, 35);
 
+    limits = getTemperatureLimits(AIR_COOLING);
+    EXPECT_EQ(limits.lowerLimit, 0);
+    EXPECT_EQ(limits.upperLimit, 30);
+
     limits = getTemperatureLimits(HI_ACTIVE_COOLING);
     EXPECT_EQ(limits.lowerLimit, 0);
     EXPECT_EQ(limits.upperLimit, 45);
