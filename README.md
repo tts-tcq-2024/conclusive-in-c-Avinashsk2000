@@ -45,18 +45,18 @@ Think about guiding refactoring-work in your regular/project teams. Think of the
 You have seen a few workflows in this repository. They are quality-gates to prevent duplication, control complexity and prove functionality. Do you think some of them have potential to guide code-improvements in your team? **yes**
 
 During the next four weeks, what improvement do you plan in your code-quality practice? (in your regular work, not in this repository!)
-**
-During the next four weeks, I plan to enhance my code-quality practices by focusing on the following areas:
 
-Modularity: I will aim to structure my code into smaller, self-contained modules, making it easier to maintain and extend.
+##During the next four weeks, I plan to enhance my code-quality practices by focusing on the following areas:
 
-Bug Detection with Testing: I will prioritize bug detection through rigorous testing, ensuring that all potential edge cases are covered.
+- Modularity: I will aim to structure my code into smaller, self-contained modules, making it easier to maintain and extend.
 
-Test-Driven Development (TDD): Adopting TDD will be a key practice for me, as it promotes writing tests before code, leading to higher reliability and better design.
+- Bug Detection with Testing: I will prioritize bug detection through rigorous testing, ensuring that all potential edge cases are covered.
 
-Effective Testing: I will work on improving the effectiveness of my testing strategies, ensuring that tests are meaningful and cover a wide range of scenarios.
+- Test-Driven Development (TDD): Adopting TDD will be a key practice for me, as it promotes writing tests before code, leading to higher reliability and better design.
 
-Code Reviews for All Code: Implementing a process for code reviews for every piece of code written will help catch issues early and encourage best practices.
+- Effective Testing: I will work on improving the effectiveness of my testing strategies, ensuring that tests are meaningful and cover a wide range of scenarios.
 
-Implementing Pure Functions: I will focus on writing pure functions, as they enhance testability and make the code easier to understand and reason about.m
+- Code Reviews for All Code: Implementing a process for code reviews for every piece of code written will help catch issues early and encourage best practices.
+
+- Implementing Pure Functions: I will focus on writing pure functions, as they enhance testability and make the code easier to understand and reason about.m
 **
