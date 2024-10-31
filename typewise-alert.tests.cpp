@@ -68,14 +68,26 @@ void test_sendToController_Mock() {
     mockSendToController = mockSendToControllerFunc;
     mockSendToController(TOO_LOW);
     assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);
+
+    mockSendToController(TOO_HIGH);
+    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);
+
+    // Reset mock pointer
+    mockSendToController = NULL;
 }
 
 // Test for sending to email using the mock function pointer
 void test_sendToEmail_Mock() {
     // Set the mock function pointer and call
     mockSendToEmail = mockSendToEmailFunc;
+    mockSendToEmail(TOO_LOW);
+    assert(strcmp(printfBuffer, "Email Alert: 0\n") == 0);
+
     mockSendToEmail(TOO_HIGH);
     assert(strcmp(printfBuffer, "Email Alert: 2\n") == 0);
+
+    // Reset mock pointer
+    mockSendToEmail = NULL;
 }
 
 // Test for checkAndAlert with mocked email function
@@ -83,7 +95,7 @@ void test_checkAndAlert_Email() {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = HI_ACTIVE_COOLING;
 
-    // Set up mock functions
+    // Set up mock function
     mockSendToEmail = mockSendToEmailFunc;
     
     // Test high temperature case
@@ -93,6 +105,9 @@ void test_checkAndAlert_Email() {
     // Test normal temperature case
     checkAndAlert(TO_EMAIL, batteryChar, 30);
     assert(strcmp(printfBuffer, "Email Alert: 1\n") == 0);  // Expect NORMAL alert
+
+    // Reset mock pointer
+    mockSendToEmail = NULL;
 }
 
 // Test for checkAndAlert with mocked controller function
@@ -100,10 +115,17 @@ void test_checkAndAlert_Controller() {
     BatteryCharacter batteryChar;
     batteryChar.coolingType = PASSIVE_COOLING;
 
-    // Set up mock functions
+    // Set up mock function
     mockSendToController = mockSendToControllerFunc;
 
     // Test low temperature case
     checkAndAlert(TO_CONTROLLER, batteryChar, -5);
     assert(strcmp(printfBuffer, "Controller Alert: 0\n") == 0);  // Expect TOO_LOW alert
+
+    // Test high temperature case
+    checkAndAlert(TO_CONTROLLER, batteryChar, 40);
+    assert(strcmp(printfBuffer, "Controller Alert: 2\n") == 0);  // Expect TOO_HIGH alert
+
+    // Reset mock pointer
+    mockSendToController = NULL;
 }
